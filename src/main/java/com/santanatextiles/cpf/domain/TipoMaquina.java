@@ -33,8 +33,8 @@ public class TipoMaquina  implements Serializable {
 	private String nome;
 	
 	@Column(name="B2CLASMAT")
-	private Integer cdClasse;
-
+	private Integer cdClasse; 
+	
 	@Transient
 	private String dsClasse; 
 	

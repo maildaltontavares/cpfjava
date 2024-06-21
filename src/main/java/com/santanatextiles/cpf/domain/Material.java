@@ -26,18 +26,28 @@ public class Material implements Serializable{
 	@Column(name="D0421_NOME")
 	private String descricao;
 	
+	
+	@Column(name="D0403_ID_CLASSE_MATERIAL")
+	private Double classeMaterial;	
+	
+	
+	
 	public Material() {
 		
-	}
+	} 
 
-	public Material(Long localizacao, Long codigo, String descricao) {
+	public Material(Long localizacao, Long codigo, String descricao, Double classeMaterial) {
 		super();
 		this.localizacao = localizacao;
 		this.codigo = codigo;
 		this.descricao = descricao;
+		this.classeMaterial = classeMaterial;
 	}
 
-	
+
+
+
+
 	public Long getLocalizacao() {
 		return localizacao;
 	}
@@ -60,6 +70,16 @@ public class Material implements Serializable{
 
 	public void setDescricao(String descricao) {
 		this.descricao = descricao;
+	}   
+
+
+
+	public Double getClasseMaterial() {
+		return classeMaterial;
+	}
+
+	public void setClasseMaterial(Double classeMaterial) {
+		this.classeMaterial = classeMaterial;
 	}
 
 	@Override

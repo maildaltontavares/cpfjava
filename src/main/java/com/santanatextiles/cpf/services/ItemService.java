@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.santanatextiles.cpf.domain.Item;
 import com.santanatextiles.cpf.domain.ItemId;
+import com.santanatextiles.cpf.domain.TipoMaquina;
 import com.santanatextiles.cpf.repositories.ItemRepository;
 import com.santanatextiles.cpf.resources.utils.URL;
  
@@ -20,6 +21,9 @@ public class ItemService {
 	
 	@Autowired
 	private ItemRepository repo;
+	
+	@Autowired
+	private TipoMaquinaService tipoMaquinaService;
 	
 	public List<Item> buscaItem(Long idfil){	 
 		List<Item> obj = repo.buscaItem(idfil); 
@@ -37,10 +41,29 @@ public class ItemService {
 		return obj.orElse(null);
 	}
 	
+	 
+	public Item buscarItemClasse(String idfil, Long codigo, String tipoMaquina) {
+		
+		Long localizacao = URL.codigoLocalizacao(idfil);
+		TipoMaquina tpMaq = tipoMaquinaService.buscaTipoMaquinaById(idfil,tipoMaquina);
+		
+		 Item  obj =  repo.procuraPorCodigoClasse(Long.valueOf(idfil), codigo , tpMaq.getCdClasse());
+		return obj ;
+	}
+	
+		 
+	
+	public List<Item> procuraPorDescricaoClasse(String idfil,String descricao,String tipoMaquina) {
+		Long localizacao = URL.codigoLocalizacao(idfil);
+		
+		TipoMaquina tpMaq = tipoMaquinaService.buscaTipoMaquinaById(idfil,tipoMaquina);
+		return repo.procuraPorDescricaoClasse(localizacao, Long.valueOf(idfil), descricao.toUpperCase(),tpMaq.getCdClasse());
+	}
+ 
 	public List<Item> procuraPorDescricao(String idfil,String descricao) {
 		Long localizacao = URL.codigoLocalizacao(idfil);
 		return repo.procuraPorDescricao(localizacao, Long.valueOf(idfil), descricao.toUpperCase());
-	}
+	}	
 	    
     
     

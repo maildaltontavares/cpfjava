@@ -60,12 +60,40 @@ public class ItemResource {
 	} 
  
 	@CrossOrigin
+	@RequestMapping(value="itclasse/{idfil}/{codigo}/{tipoMaquina}", method=RequestMethod.GET)
+	public ResponseEntity<?> findItemClasse(@PathVariable String idfil, @PathVariable Long codigo, @PathVariable String tipoMaquina) {
+		try {
+			Item obj = service.buscarItemClasse(idfil,codigo,tipoMaquina); 
+			return ResponseEntity.ok().body(obj);
+		} catch(Exception e) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+		} 		
+		
+	} 	
+  
+	@CrossOrigin
 	@RequestMapping(value="/{idfil}/descricao/{descricao}",method=RequestMethod.GET)
 	public  ResponseEntity<?> procuraPorDescricao(
 			@PathVariable String idfil,
 			@PathVariable String descricao) {
 		try {
 			List<Item> lista = service.procuraPorDescricao(idfil,descricao);
+			return ResponseEntity.ok().body(lista);
+		} catch(Exception e) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+		} 		
+		
+	} 	
+	
+	@CrossOrigin
+	@RequestMapping(value="itemclasse/{idfil}/{descricao}/{tipoMaquina}",method=RequestMethod.GET)
+	public  ResponseEntity<?> procuraPorDescricaoClasse(
+			@PathVariable String idfil,
+			@PathVariable String descricao,
+			@PathVariable String tipoMaquina
+			) {
+		try {
+			List<Item> lista = service.procuraPorDescricaoClasse(idfil,descricao,tipoMaquina);
 			return ResponseEntity.ok().body(lista);
 		} catch(Exception e) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
