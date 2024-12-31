@@ -260,7 +260,7 @@ public interface ProducaoFiacaoRepository extends JpaRepository<ProducaoFiacao, 
 		    "D4T15 ,    " +    
 		    "D4T125,    " +    
 		    "D4T120,    " +    
-		    "D4T115,    " +    
+		    "D4T115,    " +     
 		    "D4T225,    " +    
 		    "D4T220,    " +    
 		    "D4T215 "  +  	      
@@ -432,6 +432,30 @@ public interface ProducaoFiacaoRepository extends JpaRepository<ProducaoFiacao, 
 		 
 		);	
   
+	
+	
+	@Query(value = ""+
+	" select   " + 
+	" SUBSTR(TB_TP,1,5) as titulo   " +
+	" 	from " +
+	" (	 " +
+	" 	  select D0421_ID_MAT_SAP cod_inteligente  ,m.d0421_id_material id_material, m.D0403_ID_CLASSE_MATERIAL cdClasse  " +  
+	"      from " +
+	" 	   stl.e0422_stl_item               i, " + 
+	" 	   stl.e0421_stl_material           m  " +  
+	"      where          " + 
+	"      i.d0421_id_material = m.d0421_id_material and " + 
+	"      i.d0422_id_item =  to_number(:item) " + 
+    " 	) tb_tmp  " + 
+	"   left join SAP.tb_dbf tb on idfil = STL.FN_STL_IDFIL('PD', :idfil )   AND tb_nr = 'TT' and trim(TB_CD) = trim(substr(cod_inteligente,1,3)) " 
+  ,nativeQuery = true)		
+	String buscaTituloSap(
+	@Param("idfil") String idfil ,
+	@Param("item") String item   
+	 
+	);		
+		
+	
 	
 
 	

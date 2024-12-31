@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.santanatextiles.cpf.customQueryResults.UltProdFiacao;
+import com.santanatextiles.cpf.domain.FichaTecnica;
 import com.santanatextiles.cpf.domain.ProducaoFiacao;
 import com.santanatextiles.cpf.domain.Turno;
 import com.santanatextiles.cpf.dto.ProducaoFiacaoDTO;
@@ -32,6 +34,9 @@ public class ProducaoFiacaoService {
 	
 	@Autowired
 	private ProducaoFiacaoRepository repo;
+	
+	@Autowired
+	private FichaTecnicaService ftService;
 	
     @Autowired
 	private UltProdFiacaoService ultProdServ;
@@ -90,11 +95,44 @@ public class ProducaoFiacaoService {
 	
 	@Transactional
 	public ProducaoFiacao insert(ProducaoFiacao obj) {	 
+		 
+		LocalDate dateProd = obj.getDataProducao().toInstant()
+                 .atZone(ZoneId.systemDefault())
+                 .toLocalDate();		 
+		 
+	    String diaProd = String.format("%02d", Integer.valueOf(String.valueOf(dateProd.getDayOfMonth()))); 
+	    String mesProd = String.format("%02d", Integer.valueOf(String.valueOf(dateProd.getMonthValue())));   
+        String anoProd = String.valueOf(dateProd.getYear());        // "2024"
+        
+        String dateProdCompl = anoProd + mesProd + diaProd; 
+        
+		ProducaoFiacao existeRegistro = repo.buscaProducaoFiacaoByPK( obj.getIdfil() , obj.getCodigoMaquina(), dateProdCompl, obj.getTurno() , obj.getLado(), obj.getHoraInicio());
 		
- 
+		if(existeRegistro != null) {			
+			throw new DataIntegrityException("Registro já existente."); 
+		} 
+		
 		if(!obj.getCodigoMaquina().equals("11")) {			
 			obj.setIdSSM(9999999);
-		}		
+		}	 	 
+		
+		if(obj.getTituloCadastro()==null || obj.getTituloNominal() == null   ||  obj.getTituloReal()  == null ||
+			     obj.getTituloNominal().equals(0.00)   ||  obj.getTituloReal().equals(0.00)  || 
+			     obj.getTituloNominal().equals(0.0)   ||  obj.getTituloReal().equals(0.0)  || 
+			     obj.getTituloNominal().equals(0)   ||  obj.getTituloReal().equals(0) )   {		
+		
+		      	 Double oTitulo = obtemTitulo(obj);
+		      	 
+		      	 if(oTitulo!=null) {
+		      		 
+		      		 obj.setTituloCadastro(oTitulo.toString());
+		      		 obj.setTituloNominal(oTitulo);
+		      		 obj.setTituloReal(oTitulo);
+		      		 
+		      	 }
+		      	 
+		}
+		
 		
 		verificaEntidades(obj); 
 		
@@ -110,8 +148,26 @@ public class ProducaoFiacaoService {
 		
 		if(!obj.getCodigoMaquina().equals("11")) {			
 			obj.setIdSSM(9999999);
-		}		
+		}	 
  
+		if(obj.getTituloCadastro()==null || obj.getTituloNominal() == null   ||  obj.getTituloReal()  == null ||
+			     obj.getTituloNominal().equals(0.00)   ||  obj.getTituloReal().equals(0.00)  || 
+			     obj.getTituloNominal().equals(0.0)   ||  obj.getTituloReal().equals(0.0)  || 
+			     obj.getTituloNominal().equals(0)   ||  obj.getTituloReal().equals(0) )   {		
+		
+		      	 Double oTitulo = obtemTitulo(obj);
+		      	 
+		      	 if(oTitulo!=null) {
+		      		 
+		      		 obj.setTituloCadastro(oTitulo.toString());
+		      		 obj.setTituloNominal(oTitulo);
+		      		 obj.setTituloReal(oTitulo);
+		      		 
+		      	 }
+		      	 
+		}		
+		
+		
 		verificaEntidades(obj);
 		
 		if (!this.msg.isEmpty()) {					 
@@ -120,6 +176,8 @@ public class ProducaoFiacaoService {
 		return repo.save(obj);	
 		
 	} 	
+	
+	
 	
 	@Transactional
 	public Boolean  deletaProducaoFiacao(String idfil, String maquina, String dataProducao, String turno, String lado, Integer horaInicial) throws SQLException {
@@ -432,7 +490,7 @@ public class ProducaoFiacaoService {
 				 if(obj.getIdfil() == null) {
 				 	this.msg.add("Filial não informada");
 			     }  
-				
+				 
 		    	 // Valida se as horas sao iguais
 		     	 if( obj.getHoraInicio().equals(obj.getHoraFinal()))  {
 		    		  this.msg.add("Hora inicial igual a data final.");  	
@@ -516,6 +574,61 @@ public class ProducaoFiacaoService {
 			}
 			return; 			 
 	 }	
+	 
+	 public Double buscaTituloSap(String idfil, String item){
+			
+		 String sTit = repo.buscaTituloSap(idfil, item); 
+		 
+		 Double vTit;
+		 
+		 if(sTit!=null) { 
+			 try {
+		            // Tentando converter a string para um Double
+	             vTit = Double.parseDouble(sTit);  
+	         } catch (NumberFormatException e) {
+	          
+	        	throw new DataIntegrityException("Erro ao Obter o título do fio");
+	         }		
+		 }else {
+			 
+			 vTit = 0.00;
+		 }
+			
+		return vTit;
+		
+		
+	}
+	
+	public Double obtemTitulo(ProducaoFiacao obj) {
+		
+		Double dTitulo = 0.00;
+		
+		if(obj.getTituloCadastro()==null || obj.getTituloNominal() == null   ||  obj.getTituloReal()  == null ||
+		     obj.getTituloNominal().equals(0.00)   ||  obj.getTituloReal().equals(0.00)  || 
+		     obj.getTituloNominal().equals(0.0)   ||  obj.getTituloReal().equals(0.0) || 
+		     obj.getTituloNominal().equals(0)   ||  obj.getTituloReal().equals(0) )   {
+             
+			 String tipMaq = obj.getCodigoMaquina().substring(2,4);
+			 
+			 if( tipMaq.equals("06") || tipMaq.equals("04") ) {				 
+				 Double nTitulo = buscaTituloSap(obj.getIdfil(), obj.getItem());	
+				 if(nTitulo!=null) {					 
+					 dTitulo = nTitulo; 
+				 }
+			 }else {
+				 
+			     FichaTecnica ftItem = ftService.buscaFichaTecnicaItem(obj.getIdfil(),obj.getItem());		     
+			     
+			     if(ftItem.getTitulo()!=null) {	
+			        dTitulo = ftItem.getTitulo();
+			     }
+			     
+			 }
+		}	
+		
+		return dTitulo;
+		
+	}	 
 	 
 	 
   

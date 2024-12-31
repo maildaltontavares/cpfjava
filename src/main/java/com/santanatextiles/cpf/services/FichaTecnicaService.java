@@ -13,7 +13,10 @@ public class FichaTecnicaService {
 	private FichaTecnicaRepository repo;
 	
 	public FichaTecnica buscaFichaTecnicaItem(String idfil, String codigo) {  
-		return repo.buscaFichaTecnicaItem(idfil, codigo);
+		
+		FichaTecnica ft = repo.buscaFichaTecnicaItem(idfil, codigo);
+		
+		return ft;
 	}	
 	
 	
